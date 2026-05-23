@@ -142,7 +142,7 @@ class PT25ROS(Node):
     def poll(self, address):
         roll = self.pt25.poll(address)
         if roll < 0:
-            self.get_logger().warn(f'Invalid position: {roll:.3f}')
+            self.get_logger().warn(f'Invalid position: {roll:.3f}', throttle_duration_sec=60.0)
             return
         roll_msg = JointState()
         roll_msg.header.stamp = self.get_clock().now().to_msg()
