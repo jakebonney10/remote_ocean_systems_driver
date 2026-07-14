@@ -23,6 +23,7 @@ class TiltSpeedTeleop(Node):
         self.declare_parameter('joy_topic', '/joy')
         self.declare_parameter('cmd_speed_topic', '/pt25/cmd_speed')
         self.declare_parameter('axis', 7)
+        self.declare_parameter('invert', False)
         self.declare_parameter('deadband', 0.05)
         self.declare_parameter('max_device_speed', 10)   # 0..80, each ~0.5 deg/s
 
@@ -30,6 +31,7 @@ class TiltSpeedTeleop(Node):
         self.joy_topic = self.get_parameter('joy_topic').value
         self.cmd_speed_topic = self.get_parameter('cmd_speed_topic').value
         self.axis_idx = int(self.get_parameter('axis').value)
+        self.sign = -1.0 if bool(self.get_parameter('invert').value) else 1.0
         self.deadband = float(self.get_parameter('deadband').value)
         self.max_speed_units = max(0, min(80, int(self.get_parameter('max_device_speed').value)))
 
@@ -42,7 +44,7 @@ class TiltSpeedTeleop(Node):
 
         self.get_logger().info(
             f"[{self.get_name()}] listening on {self.joy_topic}, "
-            f"axis={self.axis_idx} → {self.cmd_speed_topic}, "
+            f"axis={self.axis_idx} (invert={self.sign < 0}) → {self.cmd_speed_topic}, "
             f"max_device_speed={self.max_speed_units} (units ~0.5 deg/s)"
         )
 
@@ -53,7 +55,7 @@ class TiltSpeedTeleop(Node):
             v = 0.0
 
         # Map [-1..1] -> [-max..+max], clamp
-        speed_units = int(round(v * self.max_speed_units))
+        speed_units = int(round(self.sign * v * self.max_speed_units))
         speed_units = max(-80, min(80, speed_units))
 
         # Publish rules:
